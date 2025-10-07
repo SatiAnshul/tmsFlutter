@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -13,6 +12,7 @@ import '../../../controller/attendance_controller.dart';
 import '../../../dto/attendance_register_dto.dart';
 import '../../../utils/date_utils.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:syncfusion_flutter_xlsio/xlsio.dart' hide Column, Row;
 import 'package:share_plus/share_plus.dart';
 
 class ViewAttendanceScreen extends StatefulWidget {
@@ -130,45 +130,96 @@ class _ViewAttendanceScreenState extends State<ViewAttendanceScreen> {
     return androidInfo.version.sdkInt;
   }
 
-  Future<void> exportAttendanceExcel(List attendanceList) async {
+  Future<void> exportAttendanceExcel(
+      List attendanceList,
+      ) async
+  {
+    if (attendanceList.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("No attendance data available")),
+      );
+      return;
+    }
+
     try {
-      // Create Excel
-      var excel = Excel.createExcel();
-      excel.delete('Sheet1');
-      final sheet = excel['Attendance'];
-      sheet.appendRow(["Date", "In Time", "Out Time"]);
+      // Create workbook and sheet
+      final Workbook workbook = Workbook();
+      final Worksheet sheet = workbook.worksheets[0];
+      sheet.name = 'Attendance';
 
-      for (var item in attendanceList) {
-        sheet.appendRow([item.date ?? "-", item.inTime ?? "-", item.outTime ?? "-"]);
+      // Define styles
+      final Style headerStyle = workbook.styles.add('headerStyle');
+      headerStyle.backColor = '#93D7EF'; // light blue
+      headerStyle.bold = true;
+      headerStyle.hAlign = HAlignType.center;
+      headerStyle.vAlign = VAlignType.center;
+      headerStyle.borders.all.lineStyle = LineStyle.thin;
+
+      final Style cellStyle = workbook.styles.add('cellStyle');
+      cellStyle.hAlign = HAlignType.center;
+      cellStyle.vAlign = VAlignType.center;
+      cellStyle.borders.all.lineStyle = LineStyle.thin;
+
+      // Add title row (merged)
+      final String title = "Attendance Report";
+      sheet.getRangeByIndex(1, 1, 1, 3).merge();
+      sheet.getRangeByIndex(1, 1).setText(title);
+      sheet.getRangeByIndex(1, 1).cellStyle = headerStyle;
+      sheet.getRangeByIndex(1, 1, 1, 3).rowHeight = 25;
+
+      //Add header row
+      final headers = ["Date", "In Time", "Out Time"];
+      for (int i = 0; i < headers.length; i++) {
+        sheet.getRangeByIndex(2, i + 1).setText(headers[i]);
+        sheet.getRangeByIndex(2, i + 1).cellStyle = headerStyle;
       }
 
-      // Save in app's external files dir
-      Directory? directory;
-      if (Platform.isAndroid) {
-        directory = await getExternalStorageDirectory(); // Downloads folder
-      } else if (Platform.isIOS) {
-        directory = await getApplicationDocumentsDirectory(); // iOS: no public folder
+      // Add attendance data
+      for (int i = 0; i < attendanceList.length; i++) {
+        final item = attendanceList[i];
+        sheet.getRangeByIndex(i + 3, 1).setText(item.date ?? "-");
+        sheet.getRangeByIndex(i + 3, 2).setText(item.inTime ?? "-");
+        sheet.getRangeByIndex(i + 3, 3).setText(item.outTime ?? "-");
+
+        // Apply style to each data cell
+        for (int c = 1; c <= 3; c++) {
+          sheet.getRangeByIndex(i + 3, c).cellStyle = cellStyle;
+        }
       }
-      final fileName = "attendance_${DateTime.now().millisecondsSinceEpoch}.xlsx";
-      final filePath = "${directory!.path}/$fileName";
-      final file = File(filePath);
 
-      await file.writeAsBytes(excel.encode()!);
+      // Auto-fit all columns
+      for (int c = 1; c <= 3; c++) {
+        sheet.autoFitColumn(c);
+      }
 
-      // Share
-      await Share.shareXFiles([XFile(file.path)], text: "Attendance Export");
+      //Save the file
+      final List<int> bytes = workbook.saveAsStream();
+      workbook.dispose();
+
+      final Directory directory = Platform.isAndroid
+          ? (await getExternalStorageDirectory())!
+          : await getApplicationDocumentsDirectory();
+
+      final String fileName =
+          "Attendance_${DateTime.now().millisecondsSinceEpoch}.xlsx";
+      final String filePath = "${directory.path}/$fileName";
+      final File outFile = File(filePath);
+      await outFile.writeAsBytes(bytes);
+
+      // Share the file
+      await Share.shareXFiles([XFile(outFile.path)],
+          text: "Attendance Excel Export");
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Excel exported to $filePath")),
       );
     } catch (e) {
-      debugPrint("Export error: $e");
+      debugPrint("Excel export error: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to export Excel")),
+        const SnackBar(content: Text("Failed to export Excel")),
       );
     }
   }
-
 
   Future<void> exportAttendancePdf(List attendanceList) async {
     final pdf = pw.Document();

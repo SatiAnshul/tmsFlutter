@@ -59,6 +59,19 @@ class ApiClient {
       throw Exception("GET $endpoint failed: ${response.statusCode} ${response.body}");
     }
   }
+  Future<Map<String, dynamic>> getWithoutToken(
+      String endpoint, {
+        Map<String, String>? queryParameters
+      }) async {
+    final uri = Uri.parse(baseUrl + endpoint).replace(queryParameters: queryParameters);
+
+    final response = await http.get(uri);
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception("GET $endpoint failed: ${response.statusCode} ${response.body}");
+    }
+  }
 
 
 }

@@ -74,20 +74,17 @@ class LoginController extends GetxController {
 
       final prefs = await SharedPreferences.getInstance();
 
-      // ✅ Save needed fields into SharedPrefs
       await prefs.setString("emp_name", details.items[0].UserName ?? "");
       await prefs.setString("designation", details.items[0].UserDesignation ?? "");
       await prefs.setString("user_type", details.items[0].UserType ?? "");
       await prefs.setString("type_of_user", details.items[0].Type ?? "");
       await prefs.setString("user_image_id", details.items[0].ImageId ?? "");
 
-      // You can save more depending on your response model
     } catch (e) {
       // Don’t block login if this fails
       print("User details fetch failed: $e");
     }
   }
-
 
 
 

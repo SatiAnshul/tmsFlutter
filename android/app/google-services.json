@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1053315429438",
+    "project_id": "tecxperttms-fc21d",
+    "storage_bucket": "tecxperttms-fc21d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1053315429438:android:9f149625f94d1aa9888d6f",
+        "android_client_info": {
+          "package_name": "com.tecxpert.tms"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAl3b4GloScR_gRuTtRWA-nKqm2JrLsvbU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -13,6 +13,24 @@
     <string>Needed to save/export attendance files</string>
     <key>NSDocumentsFolderUsageDescription</key>
     <string>Needed to export files</string>
+    <key>FirebaseAppDelegateProxyEnabled</key>
+    <true/>
+
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>fetch</string>
+        <string>remote-notification</string>
+    </array>
+
+    <key>NSUserTrackingUsageDescription</key>
+    <string>This identifier will be used to deliver personalized notifications.</string>
+
+    <key>FirebaseMessagingAutoInitEnabled</key>
+    <true/>
+    <key>UNUserNotificationCenterDelegate</key>
+    <true/>
+
+
 
 
 	<key>CFBundleDisplayName</key>

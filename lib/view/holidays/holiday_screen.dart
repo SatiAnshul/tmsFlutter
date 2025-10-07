@@ -28,7 +28,6 @@ class ViewHolidayScreenState extends State<ViewHolidayScreen> {
         APPVersion: majorVersion!,
         APPName: appName!,
       );
-      // TODO: load from SharedPrefs
       await controller.fetchHoliday(dto, "Bearer $token");
     // else {
     //   Get.snackbar("Error", "Please select both dates");
@@ -43,8 +42,8 @@ class ViewHolidayScreenState extends State<ViewHolidayScreen> {
     final packageInfo = await PackageInfo.fromPlatform();
     fullVersion = packageInfo.version; // "6.0.0"
     majorVersion = fullVersion?.split('.').first; // "6"
-    appName = packageInfo.packageName; // e.g. "com.tecxpert.tms"
-    _loadData();  //
+    appName = packageInfo.packageName;
+    _loadData();
   }
 
 
@@ -53,8 +52,7 @@ class ViewHolidayScreenState extends State<ViewHolidayScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text("Holidays List"),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          color: Colors.white,
+          icon: const Icon(Icons.arrow_back,color: Colors.white,),
           onPressed: () {
             Get.back();
           },
@@ -74,7 +72,7 @@ class ViewHolidayScreenState extends State<ViewHolidayScreen> {
           ),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(12.0),
           child: _buildHolidayTable(),
         ),
       ),
@@ -83,8 +81,7 @@ class ViewHolidayScreenState extends State<ViewHolidayScreen> {
 
   Widget _buildHolidayTable(){
     return Padding(
-      padding: const EdgeInsets.all(24),
-
+      padding: const EdgeInsets.all(6),
       child: Column(spacing: 10,crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // Table header
@@ -138,9 +135,9 @@ class ViewHolidayScreenState extends State<ViewHolidayScreen> {
                         child:
                         Row(
                             children: [
-                              Expanded(child: Text(item.HolidayDate ?? "N/A",textAlign: TextAlign.center,style: TextStyle(color:Colors.black,fontSize: 14,fontWeight: FontWeight.w200),)),
-                              Expanded(child: Text(item.Day ?? "N/A",textAlign: TextAlign.center,style: TextStyle(color:Colors.black,fontSize: 14,fontWeight: FontWeight.w200))),
-                              Expanded(child: Text(item.Occasion ?? "N/A",textAlign: TextAlign.center,style: TextStyle(color:Colors.black,fontSize: 14,fontWeight: FontWeight.w200))),
+                              Expanded(child: Text(item.HolidayDate ?? "N/A",textAlign: TextAlign.center,style: TextStyle(color:Colors.black,fontSize: 14,fontWeight: FontWeight.bold),)),
+                              Expanded(child: Text(item.Day ?? "N/A",textAlign: TextAlign.center,style: TextStyle(color:Colors.black,fontSize: 14,fontWeight: FontWeight.bold))),
+                              Expanded(child: Text(item.Occasion ?? "N/A",textAlign: TextAlign.center,style: TextStyle(color:Colors.black,fontSize: 14,fontWeight: FontWeight.bold))),
                             ]
                         )
                     );

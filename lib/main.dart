@@ -1,21 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/date_symbol_data_local.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tms/view/holidays/holiday_screen.dart';
-import 'package:tms/view/myattendance/mark_attendance/face_verification_screen.dart';
-import 'package:tms/view/myattendance/master_attendance/view_master_attendance_screen.dart';
-import 'package:tms/view/myattendance/view_attendance/view_attendance_screen.dart';
-import 'package:tms/view/reset_password/reset_password_screen.dart';
+import 'package:intl/date_symbol_data_local.dart';
+
+import 'services/fcm_service.dart';
 import 'view/login/login_screen.dart';
 import 'view/dashboard/dashboard_screen.dart';
+import 'view/myattendance/view_attendance/view_attendance_screen.dart';
+import 'view/myattendance/master_attendance/view_master_attendance_screen.dart';
+import 'view/myattendance/mark_attendance/face_verification_screen.dart';
+import 'view/holidays/holiday_screen.dart';
+import 'view/reset_password/reset_password_screen.dart';
 
+//Background message handler
+Future<void> _firebaseBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+  print("Background message: ${message.data}");
+  // You can also show a local notification here if you want
+}
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized(); // required before using SharedPreferences
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp();
+
+  // Register background message handler
+  FirebaseMessaging.onBackgroundMessage(_firebaseBackgroundHandler);
+
+  // Initialize your FCM service
+  await FcmService.init();
 
   final sharedPref = await SharedPreferences.getInstance();
   final bool isLogged = sharedPref.getBool("is_logged") ?? false;
+
   await initializeDateFormatting('en', null);
 
   runApp(MyApp(isLogged: isLogged));
@@ -70,6 +89,5 @@ class MyApp extends StatelessWidget {
       ],
     );
   }
-
 
 }
