@@ -300,6 +300,7 @@ class _ViewAttendanceScreenState extends State<ViewAttendanceScreen> {
         ),
         actions: [
           PopupMenuButton<String>(
+            iconColor: Colors.white,
             onSelected: (value) async {
               if (value == 'excel') {
                 await _exportAttendanceinExcel();
