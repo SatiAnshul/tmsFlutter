@@ -2,37 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
-
-	<key>NSCameraUsageDescription</key>
-    <string>This app requires camera access to verify your face.</string>
-    <key>NSLocationWhenInUseUsageDescription</key>
-    <string>This app requires location access to mark your attendance.</string>
-    <key>NSPhotoLibraryUsageDescription</key>
-    <string>Needed to save/export attendance files</string>
-    <key>NSDocumentsFolderUsageDescription</key>
-    <string>Needed to export files</string>
-    <key>FirebaseAppDelegateProxyEnabled</key>
-    <true/>
-
-    <key>UIBackgroundModes</key>
-    <array>
-        <string>fetch</string>
-        <string>remote-notification</string>
-    </array>
-
-    <key>NSUserTrackingUsageDescription</key>
-    <string>This identifier will be used to deliver personalized notifications.</string>
-
-    <key>FirebaseMessagingAutoInitEnabled</key>
-    <true/>
-    <key>UNUserNotificationCenterDelegate</key>
-    <true/>
-
-
-
-
 	<key>CFBundleDisplayName</key>
 	<string>Tms</string>
 	<key>CFBundleExecutable</key>
@@ -51,8 +24,43 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<true/>
+	<key>FirebaseMessagingAutoInitEnabled</key>
+	<true/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>This app requires access to the camera.</string>
+	<key>NSDocumentsFolderUsageDescription</key>
+	<string>Needed to export files</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Why is my app authenticating using face id?</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string></string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app needs your location to test the location feature of the Google Maps location picker plugin.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>We need your microphone to convert voice to text</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app requires access to the photo library.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>We need speech recognition to convert your voice to text</string>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>This identifier will be used to deliver personalized notifications.</string>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>processing</string>
+		<string>location</string>
+	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
@@ -70,9 +78,19 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<key>UNUserNotificationCenterDelegate</key>
 	<true/>
-	<key>UIApplicationSupportsIndirectInputEvents</key>
-	<true/>
+
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>remote-notification</string>
+        <string>processing</string>
+    </array>
+
+    <key>BGTaskSchedulerPermittedIdentifiers</key>
+    <array>
+        <string>com.google.firebase.messaging</string>
+    </array>
+
 </dict>
 </plist>
