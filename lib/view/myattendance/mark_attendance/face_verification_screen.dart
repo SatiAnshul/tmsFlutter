@@ -145,14 +145,56 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
   Future<void> _checkGpsAndPermissions() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      // GPS not enabled, prompt user
       _showGpsDialog();
       locationCheck = false;
       return;
     }
 
-    // If GPS enabled, check permissions
-    await _checkLocationPermissions();
+    // Request both camera and location permissions
+    await _checkAllPermissions();
+  }
+
+  Future<void> _checkAllPermissions() async {
+    // Request Camera permission (for both Android & iOS)
+    var cameraStatus = await Permission.camera.status;
+    if (!cameraStatus.isGranted) {
+      cameraStatus = await Permission.camera.request();
+    }
+
+    // Request Location permission
+    var locationPermission = await Geolocator.checkPermission();
+    if (locationPermission == LocationPermission.denied) {
+      locationPermission = await Geolocator.requestPermission();
+    }
+
+    if (cameraStatus.isGranted &&
+        (locationPermission == LocationPermission.always ||
+            locationPermission == LocationPermission.whileInUse)) {
+      locationCheck = true;
+      await _getLocation();
+      await _initializeCamera();
+    } else {
+      locationCheck = false;
+      _showPermissionDialog();
+    }
+  }
+
+  /// Fallback dialog if user denies permissions
+  void _showPermissionDialog() {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Permissions required"),
+        content: const Text(
+            "Camera and location permissions are required to mark attendance."),
+        actions: [
+          TextButton(
+            onPressed: () => openAppSettings(),
+            child: const Text("Open Settings"),
+          ),
+        ],
+      ),
+    );
   }
 
   /// Check and request location permissions

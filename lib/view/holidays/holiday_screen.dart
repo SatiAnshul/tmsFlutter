@@ -86,6 +86,7 @@ class ViewHolidayScreenState extends State<ViewHolidayScreen> {
         children: [
           // Table header
           Container(
+              padding: const EdgeInsets.all(8),
               // color: Color(0xFF0894DA),
               decoration: BoxDecoration(
                 color: const Color(0xFF0894DA), // background color
@@ -93,14 +94,14 @@ class ViewHolidayScreenState extends State<ViewHolidayScreen> {
                   color: const Color(0xFF053B6B), // dark blue stroke
                   width: 2, // thickness of the stroke
                 ),
-                borderRadius: BorderRadius.circular(12), // rounded corners
+                borderRadius: BorderRadius.circular(8), // rounded corners
               ),
               child:
               Row(
                 children: const [
-                  Expanded(child: Text("Date", style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16),textAlign: TextAlign.center,)),
-                  Expanded(child: Text("Day", style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16),textAlign: TextAlign.center)),
-                  Expanded(child: Text("Occasion", style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16),textAlign: TextAlign.center)),
+                  Expanded(child: Text("Date", style: TextStyle(fontWeight: FontWeight.bold,fontSize:16 ,color: Colors.white),textAlign: TextAlign.center,)),
+                  Expanded(child: Text("Day", style: TextStyle(fontWeight: FontWeight.bold,fontSize:16 ,color: Colors.white),textAlign: TextAlign.center)),
+                  Expanded(child: Text("Occasion", style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16 , color: Colors.white),textAlign: TextAlign.center)),
                 ],
               )
           ),
@@ -123,6 +124,7 @@ class ViewHolidayScreenState extends State<ViewHolidayScreen> {
                   final item = controller.holidayList[index];
                   return
                     Container(
+                        padding: const EdgeInsets.all(8),
                         // color: Color(0xFFD6E9F3),
                         decoration: BoxDecoration(
                           color: const Color(0xFFF3F3F3), // background color
@@ -130,14 +132,14 @@ class ViewHolidayScreenState extends State<ViewHolidayScreen> {
                             color: const Color(0xFF053B6B), // dark blue stroke
                             width: 2, // thickness of the stroke
                           ),
-                          borderRadius: BorderRadius.circular(12), // rounded corners
+                          borderRadius: BorderRadius.circular(6), // rounded corners
                         ),
                         child:
                         Row(
                             children: [
-                              Expanded(child: Text(item.HolidayDate ?? "N/A",textAlign: TextAlign.center,style: TextStyle(color:Colors.black,fontSize: 14,fontWeight: FontWeight.bold),)),
-                              Expanded(child: Text(item.Day ?? "N/A",textAlign: TextAlign.center,style: TextStyle(color:Colors.black,fontSize: 14,fontWeight: FontWeight.bold))),
-                              Expanded(child: Text(item.Occasion ?? "N/A",textAlign: TextAlign.center,style: TextStyle(color:Colors.black,fontSize: 14,fontWeight: FontWeight.bold))),
+                              Expanded(child: Text(item.HolidayDate ?? "N/A",textAlign: TextAlign.center,style: TextStyle(color:Color(0xFF066CA0),fontSize: 14,fontWeight: FontWeight.bold),)),
+                              Expanded(child: Text(item.Day ?? "N/A",textAlign: TextAlign.center,style: TextStyle(color:Color(0xFF066CA0),fontSize: 14,fontWeight: FontWeight.bold))),
+                              Expanded(child: Text(item.Occasion ?? "N/A",textAlign: TextAlign.center,style: TextStyle(color:Color(0xFF066CA0),fontSize: 14,fontWeight: FontWeight.bold))),
                             ]
                         )
                     );

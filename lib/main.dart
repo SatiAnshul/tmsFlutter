@@ -69,7 +69,7 @@ class MyApp extends StatelessWidget {
           titleTextStyle: const TextStyle(
             fontWeight: FontWeight.bold,
             color: Colors.white,
-            fontSize: 26,
+            fontSize: 18,
           ),
           shape:  const RoundedRectangleBorder(
             borderRadius: BorderRadius.vertical(

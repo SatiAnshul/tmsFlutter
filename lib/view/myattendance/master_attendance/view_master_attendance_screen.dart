@@ -902,6 +902,7 @@ class _ViewAttendanceScreenState extends State<ViewMasterAttendanceScreen> {
         ),
         actions: [
           PopupMenuButton<String>(
+            iconColor: Colors.white,
             onSelected: (value) async {
               if (value == 'excel') {
                 if (_selectedView == "Details"){
@@ -960,7 +961,7 @@ class _ViewAttendanceScreenState extends State<ViewMasterAttendanceScreen> {
           ),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(10),
           child: _BuildingMainTable(),
         ),
       ),
@@ -969,7 +970,7 @@ class _ViewAttendanceScreenState extends State<ViewMasterAttendanceScreen> {
 
   Widget _BuildingMainTable() {
     return Padding(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(8),
       child: Column(
         children: [
           // Date pickers row
@@ -980,7 +981,7 @@ class _ViewAttendanceScreenState extends State<ViewMasterAttendanceScreen> {
                   onTap: () => _pickDate(isFrom: true),
                   child: Card(
                     child: Padding(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(8),
                       child: Text(
                         _fromDate ?? "From Date",
                         textAlign: TextAlign.center,
@@ -995,7 +996,7 @@ class _ViewAttendanceScreenState extends State<ViewMasterAttendanceScreen> {
                   onTap: () => _pickDate(isFrom: false),
                   child: Card(
                     child: Padding(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(8),
                       child: Text(
                         _toDate ?? "To Date",
                         textAlign: TextAlign.center,
@@ -1134,7 +1135,7 @@ class _ViewAttendanceScreenState extends State<ViewMasterAttendanceScreen> {
                     ),
                     Expanded(
                       child: Text(
-                        "Working Days",
+                        "Working",
                         style: TextStyle(fontWeight: FontWeight.bold),
                         textAlign: TextAlign.center,
                       ),
@@ -1237,22 +1238,22 @@ class _ViewAttendanceScreenState extends State<ViewMasterAttendanceScreen> {
     return Row(
       children: [
         Container(
-          width: 150,
-          padding: const EdgeInsets.all(8),
+          width: 130,
+          padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
             color: Colors.transparent, // background color
             borderRadius: BorderRadius.circular(12), // rounded corners
           ),
           child: const Text(
             "Employee Name",
-            style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white),
+            style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white, fontSize: 14),
           ),
         ),
         const Divider(),
         ...allDates.map((date) {
           return Container(
-            width: 140,
-            padding: const EdgeInsets.all(8),
+            width: 120,
+            padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
               color: Colors.transparent, // background color
               border: BoxBorder.all(
@@ -1268,9 +1269,9 @@ class _ViewAttendanceScreenState extends State<ViewMasterAttendanceScreen> {
                 const Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text("In", style: TextStyle(fontWeight: FontWeight.bold)),
-                    const Divider(),
-                    Text("Out", style: TextStyle(fontWeight: FontWeight.bold)),
+                    Text("In", style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
+                    const Divider(thickness: 2,height: 2,),
+                    Text("Out", style: TextStyle(fontWeight: FontWeight.bold,fontSize: 12)),
                   ],
                 ),
               ],
@@ -1286,8 +1287,8 @@ class _ViewAttendanceScreenState extends State<ViewMasterAttendanceScreen> {
       children: [
         // Employee name column
         Container(
-          width: 150,
-          padding: const EdgeInsets.all(8),
+          width: 130,
+          padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
             color: Colors.transparent, // background color
             border: BoxBorder.all(
@@ -1298,7 +1299,7 @@ class _ViewAttendanceScreenState extends State<ViewMasterAttendanceScreen> {
           ),
           child: Text(
             emp.employeeName ?? "-",
-            style: const TextStyle(fontWeight: FontWeight.bold),
+            style: const TextStyle(fontWeight: FontWeight.bold,fontSize: 14),
           ),
         ),
 
@@ -1351,8 +1352,8 @@ class _ViewAttendanceScreenState extends State<ViewMasterAttendanceScreen> {
               Get.snackbar("Reason", reason);
             },
             child: Container(
-              width: 140,
-              padding: const EdgeInsets.all(8),
+              width: 120,
+              padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
                 color: bgColor,
                 border: BoxBorder.all(
@@ -1369,6 +1370,7 @@ class _ViewAttendanceScreenState extends State<ViewMasterAttendanceScreen> {
                     style: TextStyle(
                       color: textColor,
                       fontWeight: FontWeight.bold,
+                      fontSize: 12
                     ),
                   ),
                   Text(
@@ -1376,6 +1378,7 @@ class _ViewAttendanceScreenState extends State<ViewMasterAttendanceScreen> {
                     style: TextStyle(
                       color: textColor,
                       fontWeight: FontWeight.bold,
+                      fontSize: 12
                     ),
                   ),
                 ],
