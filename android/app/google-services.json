@@ -1,13 +1,32 @@
 {
   "project_info": {
-    "project_number": "1053315429438",
-    "project_id": "tecxperttms-fc21d",
-    "storage_bucket": "tecxperttms-fc21d.firebasestorage.app"
+    "project_number": "993674284850",
+    "project_id": "omsp-d1fe9",
+    "storage_bucket": "omsp-d1fe9.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1053315429438:android:9f149625f94d1aa9888d6f",
+        "mobilesdk_app_id": "1:993674284850:android:568920a9b0d533f20b512b",
+        "android_client_info": {
+          "package_name": "com.tecxpert.design.oms"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBejxdQ3V8hMsMf8IqXegrEKD_klIcwJ8k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:993674284850:android:aa1578a60b4dfff90b512b",
         "android_client_info": {
           "package_name": "com.tecxpert.tms"
         }
@@ -15,7 +34,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyAl3b4GloScR_gRuTtRWA-nKqm2JrLsvbU"
+          "current_key": "AIzaSyBejxdQ3V8hMsMf8IqXegrEKD_klIcwJ8k"
         }
       ],
       "services": {

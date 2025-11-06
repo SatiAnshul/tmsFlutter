@@ -310,7 +310,11 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Face Verification")),
+      appBar: AppBar(
+        title: const Text("Face Verification"),
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+
       body: Column(
         children: [
           Expanded(

@@ -3,17 +3,17 @@
 <plist version="1.0">
 <dict>
 	<key>API_KEY</key>
-	<string>AIzaSyATfTvkerTuONLtnnMeOctr3p9_Y99oGEg</string>
+	<string>AIzaSyDXOk0gIS3ymuhQCRLDXwYa0c-dVGABbOk</string>
 	<key>GCM_SENDER_ID</key>
-	<string>1053315429438</string>
+	<string>993674284850</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
 	<string>com.tecxpert.tms</string>
 	<key>PROJECT_ID</key>
-	<string>tecxperttms-fc21d</string>
+	<string>omsp-d1fe9</string>
 	<key>STORAGE_BUCKET</key>
-	<string>tecxperttms-fc21d.firebasestorage.app</string>
+	<string>omsp-d1fe9.firebasestorage.app</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -25,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:1053315429438:ios:ee9a02e640b7e607888d6f</string>
+	<string>1:993674284850:ios:59a3ee85e1ccc4e00b512b</string>
 </dict>
 </plist>

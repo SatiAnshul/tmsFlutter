@@ -13,6 +13,7 @@ import 'view/myattendance/master_attendance/view_master_attendance_screen.dart';
 import 'view/myattendance/mark_attendance/face_verification_screen.dart';
 import 'view/holidays/holiday_screen.dart';
 import 'view/reset_password/reset_password_screen.dart';
+import 'firebase_options.dart';
 
 //Background message handler
 Future<void> _firebaseBackgroundHandler(RemoteMessage message) async {
@@ -24,13 +25,15 @@ Future<void> _firebaseBackgroundHandler(RemoteMessage message) async {
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp();
-
+  //await Firebase.initializeApp();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   // Register background message handler
   FirebaseMessaging.onBackgroundMessage(_firebaseBackgroundHandler);
 
   // Initialize your FCM service
-  await FcmService.init();
+  //await FcmService.init();
 
   final sharedPref = await SharedPreferences.getInstance();
   final bool isLogged = sharedPref.getBool("is_logged") ?? false;
