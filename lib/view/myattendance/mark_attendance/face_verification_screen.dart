@@ -29,47 +29,70 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
   String? currentLong;
   bool locationCheck = false;
 
-
   @override
   void initState() {
     super.initState();
-    //_initializeCamera();
-    _checkGpsAndPermissions();
+    // Safer on iOS: run after first frame to avoid permission timing issues
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _checkGpsAndPermissions();
+    });
   }
 
   Future<void> _initializeCamera() async {
-    final cameras = await availableCameras();
-    final frontCamera = cameras.firstWhere(
-          (cam) => cam.lensDirection == CameraLensDirection.front,
-    );
+    try {
+      final cameras = await availableCameras();
+      if (cameras.isEmpty) {
+        debugPrint("No cameras found on this device.");
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("No cameras available on this device.")),
+        );
+        return;
+      }
 
-    _cameraController = CameraController(
-      frontCamera,
-      ResolutionPreset.medium,
-      enableAudio: false,
-    );
+      final frontCamera = cameras.firstWhere(
+            (cam) => cam.lensDirection == CameraLensDirection.front,
+        orElse: () => cameras.first,
+      );
 
-    await _cameraController!.initialize();
-    if (mounted) {
-      setState(() => _isCameraInitialized = true);
+      _cameraController = CameraController(
+        frontCamera,
+        ResolutionPreset.medium,
+        enableAudio: false,
+      );
+
+      await _cameraController!.initialize();
+
+      if (mounted) {
+        setState(() => _isCameraInitialized = true);
+      }
+
+      debugPrint("Camera initialized successfully.");
+
+    } catch (e) {
+      debugPrint("Camera initialization error: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to initialize camera: $e")),
+        );
+      }
     }
   }
 
   /// Capture + Upload
   Future<void> _captureAndUpload() async {
-    if (!_cameraController!.value.isInitialized) return;
+    if (_cameraController == null || !_cameraController!.value.isInitialized) {
+      debugPrint("Camera not initialized.");
+      return;
+    }
 
     try {
       setState(() => _isLoading = true);
 
-      // Take picture
       final XFile rawImage = await _cameraController!.takePicture();
       final File originalFile = File(rawImage.path);
 
-      // Compress
       final File compressedFile = await _compressImage(originalFile);
 
-      // Upload to API
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getString("user_id") ?? "";
       final token = prefs.getString("auth_token") ?? "";
@@ -84,10 +107,14 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
         if (json["result"].toString() == "true") {
-          controller.attendanceMarking(currentLat ?? "0.00", currentLong ?? "0.00", json["data"]![0]!["File_Info"].toString(), "IOS DEVICE");
+          controller.attendanceMarking(
+            currentLat ?? "0.00",
+            currentLong ?? "0.00",
+            json["data"]![0]!["File_Info"].toString(),
+            Platform.isIOS ? "IOS DEVICE" : "ANDROID DEVICE",
+          );
+
           setState(() {
-            // _uploadedImageId =
-            //     json["data"]?[0]?["File_Info"]?.toString() ?? "";
             Get.back();
             Get.snackbar("Attendance Marked", "Successfully");
           });
@@ -102,10 +129,9 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
         );
       }
 
-      // Always cleanup
+      // Cleanup temp files
       if (originalFile.existsSync()) await originalFile.delete();
-      if (compressedFile.existsSync() &&
-          compressedFile.path != originalFile.path) {
+      if (compressedFile.existsSync() && compressedFile.path != originalFile.path) {
         await compressedFile.delete();
       }
     } catch (e) {
@@ -149,74 +175,75 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
       locationCheck = false;
       return;
     }
-
-    // Request both camera and location permissions
     await _checkAllPermissions();
   }
 
   Future<void> _checkAllPermissions() async {
-    // Request Camera permission (for both Android & iOS)
-    var cameraStatus = await Permission.camera.status;
-    if (!cameraStatus.isGranted) {
-      cameraStatus = await Permission.camera.request();
-    }
+    try {
+      // Step 1: Camera Permission
+      var cameraStatus = await Permission.camera.status;
+      if (!cameraStatus.isGranted) {
+        cameraStatus = await Permission.camera.request();
+      }
+      if (!cameraStatus.isGranted) {
+        _showPermissionDialog();
+        return;
+      }
 
-    // Request Location permission
-    var locationPermission = await Geolocator.checkPermission();
-    if (locationPermission == LocationPermission.denied) {
-      locationPermission = await Geolocator.requestPermission();
-    }
+      // Step 2: Location Permission
+      LocationPermission locationPermission = await Geolocator.checkPermission();
+      if (locationPermission == LocationPermission.denied) {
+        locationPermission = await Geolocator.requestPermission();
+      }
 
-    if (cameraStatus.isGranted &&
-        (locationPermission == LocationPermission.always ||
-            locationPermission == LocationPermission.whileInUse)) {
-      locationCheck = true;
+      await Future.delayed(const Duration(milliseconds: 800));
+
+      if (locationPermission == LocationPermission.denied ||
+          locationPermission == LocationPermission.deniedForever) {
+        _showPermissionDialog();
+        return;
+      }
+
+      // Step 3: Ensure Location Services
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        _showGpsDialog();
+        return;
+      }
+
+      // Step 4: Get Coordinates and Start Camera
       await _getLocation();
       await _initializeCamera();
-    } else {
-      locationCheck = false;
+
+      setState(() {
+        locationCheck = true;
+      });
+    } catch (e) {
+      debugPrint("Permission check error: $e");
       _showPermissionDialog();
     }
   }
 
-  /// Fallback dialog if user denies permissions
   void _showPermissionDialog() {
+    if (!mounted) return;
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
         title: const Text("Permissions required"),
         content: const Text(
-            "Camera and location permissions are required to mark attendance."),
+          "Camera and location permissions are required to mark attendance.",
+        ),
         actions: [
           TextButton(
-            onPressed: () => openAppSettings(),
+            onPressed: () {
+              Navigator.pop(context);
+              openAppSettings();
+            },
             child: const Text("Open Settings"),
           ),
         ],
       ),
     );
-  }
-
-  /// Check and request location permissions
-  Future<void> _checkLocationPermissions() async {
-    var status = await Permission.location.status;
-    if (status.isGranted) {
-      locationCheck = true;
-      await _getLocation();
-      _initializeCamera();
-    } else if (status.isDenied) {
-      // Request permission
-      if (await Permission.location.request().isGranted) {
-        locationCheck = true;
-        _initializeCamera();
-        await _getLocation();
-      } else {
-        locationCheck = false;
-      }
-    } else if (status.isPermanentlyDenied) {
-      // Show dialog to open app settings
-      openAppSettings();
-    }
   }
 
   /// Get current coordinates
@@ -239,6 +266,7 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
 
   /// Show dialog if GPS is disabled
   void _showGpsDialog() {
+    if (!mounted) return;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -247,9 +275,9 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
         actions: [
           TextButton(
             child: const Text("OK"),
-            onPressed: () {
+            onPressed: () async {
               Navigator.of(context).pop();
-              Geolocator.openLocationSettings();
+              await Geolocator.openLocationSettings();
             },
           ),
         ],
@@ -257,24 +285,19 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
     );
   }
 
-
   /// Compress image using flutter_image_compress
   Future<File> _compressImage(File file) async {
     final dir = await getTemporaryDirectory();
     final targetPath =
         "${dir.path}/compressed_${DateTime.now().millisecondsSinceEpoch}.jpg";
 
-    // In latest flutter_image_compress this is XFile?
     final XFile? result = await FlutterImageCompress.compressAndGetFile(
       file.absolute.path,
       targetPath,
       quality: 45,
     );
 
-    if (result == null) {
-      return file; // fallback to original if compression fails
-    }
-
+    if (result == null) return file;
     return File(result.path);
   }
 

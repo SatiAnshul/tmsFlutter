@@ -6,26 +6,42 @@
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 
 	<key>NSCameraUsageDescription</key>
-    <string>This app requires camera access to verify your face for attendance.</string>
-    <key>NSLocationWhenInUseUsageDescription</key>
-    <string>This app uses your location to mark attendance accurately.</string>
-    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-    <string>This app uses your location to track attendance during working hours.</string>
-    <key>NSPhotoLibraryUsageDescription</key>
-    <string>Needed to save/export attendance files</string>
-    <key>NSDocumentsFolderUsageDescription</key>
-    <string>Needed to export files</string>
-    <key>FirebaseAppDelegateProxyEnabled</key>
-    <true/>
+    <string>Camera access is needed to capture your photo for attendance submission.</string>
 
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>This app uses your location to mark attendance accurately when the app is open.</string>
+
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>This app uses your location to verify attendance even if running in the background.</string>
+
+    <!-- Strongly recommended even if you're not doing background tracking -->
+    <key>NSLocationAlwaysUsageDescription</key>
+    <string>This app requires location access even when not active, to ensure accurate attendance logs.</string>
+
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>This app may access your photo library for saving or compressing captured images.</string>
+
+    <key>NSDocumentsFolderUsageDescription</key>
+    <string>This app uses the Documents folder to temporarily store compressed image files before upload.</string>
+
+    <!-- Optional but good practice -->
+    <!--  <key>NSMicrophoneUsageDescription</key> -->
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>Allow adding the captured image to your photo library.</string>
+    <!-- <string>This app may access your microphone during camera operations (though audio is disabled by default).</string> -->
+
+
+    <!-- Firebase and push notification-related -->
+    <key>NSUserTrackingUsageDescription</key>
+    <string>This identifier will be used to deliver personalized notifications.</string>
+
+    <!-- Background permissions -->
     <key>UIBackgroundModes</key>
     <array>
         <string>fetch</string>
         <string>remote-notification</string>
     </array>
 
-    <key>NSUserTrackingUsageDescription</key>
-    <string>This identifier will be used to deliver personalized notifications.</string>
 
     <key>FirebaseMessagingAutoInitEnabled</key>
     <true/>
