@@ -1,7 +1,11 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../api/api_service.dart';
+import '../dto/update_fcm_token_dto.dart';
 
 class FcmService {
   static final FirebaseMessaging _messaging = FirebaseMessaging.instance;
@@ -10,12 +14,16 @@ class FcmService {
   FlutterLocalNotificationsPlugin();
 
   static Future<void> init() async {
-    // Request permission (iOS)
-    await _messaging.requestPermission(
+    // ✅ Request permission (iOS/Android 13+)
+    // We capture the settings to ensure we can log or handle the status if needed
+    NotificationSettings settings = await _messaging.requestPermission(
       alert: true,
       badge: true,
       sound: true,
+      provisional: false, // Set to true if you want 'Quiet' notifications initially
     );
+
+    print('User granted permission: ${settings.authorizationStatus}');
 
     // ✅ iOS foreground presentation options
     await _messaging.setForegroundNotificationPresentationOptions(
@@ -23,6 +31,7 @@ class FcmService {
       badge: true,
       sound: true,
     );
+
     // Initialize flutter_local_notifications
     const AndroidInitializationSettings androidInit =
     AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -34,22 +43,52 @@ class FcmService {
     const InitializationSettings initSettings =
     InitializationSettings(android: androidInit, iOS: iosInit);
 
-    await _localNotifications.initialize(initSettings
-      // , onDidReceiveNotificationResponse: (NotificationResponse response) {
-      //   final action = response.payload;
-      //   _handleClickActionFromPayload(action);
-      // }
-    );
+    await _localNotifications.initialize(initSettings);
 
-    // Print device token
+    // ✅ Generate and Save device token
+    // This ensures SharedPreferences has the token ready for the Login Controller
     final token = await _messaging.getToken();
-    print("FCM Token: $token");
+    if (token != null) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString("fcm_token", token);
+      print("FCM Token initialized and saved: $token");
+    }
 
     FirebaseMessaging.instance.onTokenRefresh.listen((newToken) async {
       print("🔁 FCM Token refreshed: $newToken");
+
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString("fcm_token", newToken);
-      // TODO: Send newToken to your backend here
+
+      // Check if user is logged in before trying to update the server
+      final String? userId = prefs.getString("user_id");
+      final String? authToken = prefs.getString("auth_token");
+      final bool isLogged = prefs.getBool("is_logged") ?? false;
+
+      if (isLogged && userId != null && authToken != null) {
+        try {
+          // We need an instance of ApiService to make the call
+          final api = ApiService();
+          final packageInfo = await PackageInfo.fromPlatform();
+
+          final fcmDto = UpdateFcmTokenDto(
+            userId: userId,
+            APPName: packageInfo.packageName,
+            APPVersion: packageInfo.version.split('.').first,
+            Token: newToken,
+          );
+
+          // Use the stored JWT token (with Bearer prefix)
+          await api.updateFCMToken(
+            userId: userId,
+            dto: fcmDto,
+            token: "Bearer $authToken",
+          );
+          print("✅ Server updated with refreshed FCM Token");
+        } catch (e) {
+          print("❌ Failed to update refreshed token on server: $e");
+        }
+      }
     });
 
     // Foreground messages
@@ -59,14 +98,12 @@ class FcmService {
 
     // When app is opened via notification (from background/terminated)
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      // _handleClickAction(message); // commented for now
       print("Notification tapped: ${message.data}");
     });
 
     // Handle initial message if app was terminated
     RemoteMessage? initialMessage = await _messaging.getInitialMessage();
     if (initialMessage != null) {
-      // _handleClickAction(initialMessage); // commented for now
       print("App opened from terminated state by notification: ${initialMessage.data}");
     }
   }
@@ -101,23 +138,4 @@ class FcmService {
 
     print("Foreground notification received: $title - $body");
   }
-
-// Click action handling (currently commented)
-// static void _handleClickAction(RemoteMessage message) {
-//   final action = message.data['click_action'];
-//   _handleClickActionFromPayload(action);
-// }
-
-// static void _handleClickActionFromPayload(String? action) {
-//   switch (action) {
-//     case "OPEN_APPROVE_LEAVE_SCREEN":
-//       Get.toNamed("/approve-leave");
-//       break;
-//     case "OPEN_VIEW_LEAVE_SCREEN":
-//       Get.toNamed("/view-leave");
-//       break;
-//     default:
-//       Get.toNamed("/dashboard");
-//   }
-// }
 }

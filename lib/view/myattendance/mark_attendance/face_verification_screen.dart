@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -23,119 +22,97 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
   CameraController? _cameraController;
   final AttendanceMarkController controller = Get.put(AttendanceMarkController());
   bool _isCameraInitialized = false;
-  String? _uploadedImageId;
   bool _isLoading = false;
   String? currentLat;
   String? currentLong;
-  bool locationCheck = false;
 
   @override
   void initState() {
     super.initState();
-    // Safer on iOS: run after first frame to avoid permission timing issues
+    // Important for iOS: wait for first frame before asking permissions
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await _checkGpsAndPermissions();
     });
   }
 
+
   Future<void> _initializeCamera() async {
     try {
       final cameras = await availableCameras();
       if (cameras.isEmpty) {
-        debugPrint("No cameras found on this device.");
+        debugPrint("No cameras found.");
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("No cameras available on this device.")),
+          const SnackBar(content: Text("No camera available on this device.")),
         );
         return;
       }
 
       final frontCamera = cameras.firstWhere(
-            (cam) => cam.lensDirection == CameraLensDirection.front,
+            (c) => c.lensDirection == CameraLensDirection.front,
         orElse: () => cameras.first,
       );
 
-      _cameraController = CameraController(
-        frontCamera,
-        ResolutionPreset.medium,
-        enableAudio: false,
-      );
-
+      _cameraController = CameraController(frontCamera, ResolutionPreset.medium, enableAudio: false);
       await _cameraController!.initialize();
 
-      if (mounted) {
-        setState(() => _isCameraInitialized = true);
-      }
-
+      if (mounted) setState(() => _isCameraInitialized = true);
       debugPrint("Camera initialized successfully.");
-
     } catch (e) {
-      debugPrint("Camera initialization error: $e");
+      debugPrint("Camera init error: $e");
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to initialize camera: $e")),
+          SnackBar(content: Text("Camera failed to start: $e")),
         );
       }
     }
   }
 
-  /// Capture + Upload
+
   Future<void> _captureAndUpload() async {
-    if (_cameraController == null || !_cameraController!.value.isInitialized) {
-      debugPrint("Camera not initialized.");
-      return;
-    }
+    if (_cameraController == null || !_cameraController!.value.isInitialized) return;
 
     try {
       setState(() => _isLoading = true);
 
       final XFile rawImage = await _cameraController!.takePicture();
-      final File originalFile = File(rawImage.path);
-
-      final File compressedFile = await _compressImage(originalFile);
+      final File compressed = await _compressImage(File(rawImage.path));
 
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getString("user_id") ?? "";
       final token = prefs.getString("auth_token") ?? "";
 
       final response = await _uploadImage(
-        file: compressedFile,
+        file: compressed,
         appUserCode: userId,
         userId: userId,
         token: "Bearer $token",
       );
 
       if (response.statusCode == 200) {
-        final json = jsonDecode(response.body);
-        if (json["result"].toString() == "true") {
+        final data = jsonDecode(response.body);
+        if (data["result"].toString() == "true") {
           controller.attendanceMarking(
             currentLat ?? "0.00",
             currentLong ?? "0.00",
-            json["data"]![0]!["File_Info"].toString(),
+            data["data"]![0]!["File_Info"].toString(),
             Platform.isIOS ? "IOS DEVICE" : "ANDROID DEVICE",
           );
-
-          setState(() {
-            Get.back();
-            Get.snackbar("Attendance Marked", "Successfully");
-          });
+          Get.offAllNamed('/dashboard');
+          Get.snackbar("Attendance Marked", "Successfully");
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Upload failed: ${json["Message"]}")),
+            SnackBar(content: Text("Upload failed: ${data["Message"]}")),
           );
         }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error: ${response.statusCode}")),
+          SnackBar(content: Text("Server error: ${response.statusCode}")),
         );
       }
 
-      // Cleanup temp files
-      if (originalFile.existsSync()) await originalFile.delete();
-      if (compressedFile.existsSync() && compressedFile.path != originalFile.path) {
-        await compressedFile.delete();
-      }
+      if (compressed.existsSync()) await compressed.delete();
     } catch (e) {
-      debugPrint("Upload error: $e");
+      debugPrint("Capture/upload error: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Upload failed: $e")),
       );
@@ -144,35 +121,30 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
     }
   }
 
-  /// Multipart POST (with query params)
+
   Future<http.Response> _uploadImage({
     required File file,
     required String appUserCode,
     required String userId,
     required String token,
   }) async {
-    final uri = Uri.parse(
-      "http://103.47.149.49:6550/api/TeamMgmt/FileUpload",
-    ).replace(queryParameters: {
-      "AppUserCode": appUserCode,
-      "UserId": userId,
-    });
+    final uri = Uri.parse("http://103.47.149.49:6550/api/TeamMgmt/FileUpload")
+        .replace(queryParameters: {"AppUserCode": appUserCode, "UserId": userId});
 
     final request = http.MultipartRequest("POST", uri)
       ..headers["Authorization"] = token
       ..fields["data"] = "Test"
       ..files.add(await http.MultipartFile.fromPath("file", file.path));
 
-    final streamedResponse = await request.send();
-    return await http.Response.fromStream(streamedResponse);
+    final stream = await request.send();
+    return await http.Response.fromStream(stream);
   }
 
-  /// Check if GPS (location services) is enabled
+  /// --- PERMISSION CHECKS (camera + while-in-use location only) ---
   Future<void> _checkGpsAndPermissions() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       _showGpsDialog();
-      locationCheck = false;
       return;
     }
     await _checkAllPermissions();
@@ -180,59 +152,46 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
 
   Future<void> _checkAllPermissions() async {
     try {
-      // Step 1: Camera Permission
+      // Camera
       var cameraStatus = await Permission.camera.status;
+      if (!cameraStatus.isGranted) cameraStatus = await Permission.camera.request();
       if (!cameraStatus.isGranted) {
-        cameraStatus = await Permission.camera.request();
-      }
-      if (!cameraStatus.isGranted) {
-        _showPermissionDialog();
+        _showPermissionDialog("Camera access is required to take your attendance photo.");
         return;
       }
 
-      // Step 2: Location Permission
-      LocationPermission locationPermission = await Geolocator.checkPermission();
-      if (locationPermission == LocationPermission.denied) {
+      // Location (while-in-use only)
+      var locationPermission = await Geolocator.checkPermission();
+      if (locationPermission == LocationPermission.denied ||
+          locationPermission == LocationPermission.deniedForever) {
         locationPermission = await Geolocator.requestPermission();
       }
 
-      await Future.delayed(const Duration(milliseconds: 800));
+      await Future.delayed(const Duration(milliseconds: 500));
 
-      if (locationPermission == LocationPermission.denied ||
-          locationPermission == LocationPermission.deniedForever) {
-        _showPermissionDialog();
+      if (locationPermission != LocationPermission.whileInUse &&
+          locationPermission != LocationPermission.always) {
+        _showPermissionDialog("Location access is required to record your attendance location.");
         return;
       }
 
-      // Step 3: Ensure Location Services
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        _showGpsDialog();
-        return;
-      }
 
-      // Step 4: Get Coordinates and Start Camera
       await _getLocation();
       await _initializeCamera();
-
-      setState(() {
-        locationCheck = true;
-      });
     } catch (e) {
-      debugPrint("Permission check error: $e");
-      _showPermissionDialog();
+      debugPrint("Permission error: $e");
+      _showPermissionDialog("Permissions are needed to continue.");
     }
   }
 
-  void _showPermissionDialog() {
+
+  void _showPermissionDialog(String message) {
     if (!mounted) return;
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text("Permissions required"),
-        content: const Text(
-          "Camera and location permissions are required to mark attendance.",
-        ),
+        title: const Text("Permission Required"),
+        content: Text(message),
         actions: [
           TextButton(
             onPressed: () {
@@ -246,59 +205,47 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
     );
   }
 
-  /// Get current coordinates
-  Future<void> _getLocation() async {
-    try {
-      Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
-
-      setState(() {
-        currentLat = position.latitude.toString();
-        currentLong = position.longitude.toString();
-      });
-
-      debugPrint("Latitude: $currentLat, Longitude: $currentLong");
-    } catch (e) {
-      debugPrint("Failed to get location: $e");
-    }
-  }
-
-  /// Show dialog if GPS is disabled
   void _showGpsDialog() {
     if (!mounted) return;
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (_) => AlertDialog(
         title: const Text("Enable GPS"),
-        content: const Text("Please enable GPS to continue"),
+        content: const Text("Please enable GPS to continue."),
         actions: [
           TextButton(
-            child: const Text("OK"),
             onPressed: () async {
-              Navigator.of(context).pop();
+              Navigator.pop(context);
               await Geolocator.openLocationSettings();
             },
+            child: const Text("OK"),
           ),
         ],
       ),
     );
   }
 
-  /// Compress image using flutter_image_compress
+
+  Future<void> _getLocation() async {
+    try {
+      final pos = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      setState(() {
+        currentLat = pos.latitude.toString();
+        currentLong = pos.longitude.toString();
+      });
+      debugPrint("Latitude: $currentLat, Longitude: $currentLong");
+    } catch (e) {
+      debugPrint("Location error: $e");
+    }
+  }
+
+
   Future<File> _compressImage(File file) async {
     final dir = await getTemporaryDirectory();
-    final targetPath =
-        "${dir.path}/compressed_${DateTime.now().millisecondsSinceEpoch}.jpg";
-
-    final XFile? result = await FlutterImageCompress.compressAndGetFile(
-      file.absolute.path,
-      targetPath,
-      quality: 45,
-    );
-
-    if (result == null) return file;
-    return File(result.path);
+    final targetPath = "${dir.path}/compressed_${DateTime.now().millisecondsSinceEpoch}.jpg";
+    final XFile? result =
+    await FlutterImageCompress.compressAndGetFile(file.path, targetPath, quality: 45);
+    return result == null ? file : File(result.path);
   }
 
   @override
@@ -307,14 +254,14 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
     super.dispose();
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Face Verification"),
+        title: const Text("Attendance Capture"),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
-
       body: Column(
         children: [
           Expanded(
@@ -322,11 +269,6 @@ class _FaceVerificationScreenState extends State<FaceVerificationScreen> {
                 ? CameraPreview(_cameraController!)
                 : const Center(child: CircularProgressIndicator()),
           ),
-          if (_uploadedImageId != null)
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text("Uploaded Image ID: $_uploadedImageId"),
-            ),
           const SizedBox(height: 10),
           _isLoading
               ? const CircularProgressIndicator()

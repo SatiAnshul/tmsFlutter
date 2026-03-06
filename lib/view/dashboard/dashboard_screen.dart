@@ -74,7 +74,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
     print("$userId , $getLocalDate() , $getFirstDateOfCurrentMonth() , $token");
     await dashboardController.fetchSummaryAttendance(dto, "Bearer $token");
-    await getAndSendFcmToken(userId,token,appName,majorVersion);
+    // await getAndSendFcmToken(userId,token,appName,majorVersion);
   }
   Future<void> _checkVersion() async {
     final packageInfo = await PackageInfo.fromPlatform();
@@ -418,44 +418,44 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-  Future<void> getAndSendFcmToken(String userId, String token,String appName , String appVersion) async {
-    try {
-      //Ask for notification permissions (important for iOS & Android 13+)
-      await _messaging.requestPermission(
-        alert: true,
-        badge: true,
-        sound: true,
-      );
-
-      //Check SharedPreferences for stored FCM token
-      final prefs = await SharedPreferences.getInstance();
-      String? fcmToken = prefs.getString("fcm_token");
-
-      //If no stored token, get a fresh one from Firebase
-      fcmToken ??= await _messaging.getToken();
-
-      if (fcmToken != null && fcmToken.isNotEmpty) {
-        print(" FCM Token to send: $fcmToken");
-
-        //Save/Update it in SharedPreferences for future use
-        await prefs.setString("fcm_token", fcmToken);
-
-        // Send it to your backend API
-        final dto = UpdateFcmTokenDto(
-          userId: userId,
-          APPVersion: appVersion,
-          APPName: appName,
-          Token: fcmToken,
-        );
-
-        await dashboardController.updateFCMToken(userId, dto, "Bearer $token");
-      } else {
-        print(" Failed to get FCM token.");
-      }
-    } catch (e) {
-      print("Error initializing FCM: $e");
-    }
-  }
+  // Future<void> getAndSendFcmToken(String userId, String token,String appName , String appVersion) async {
+  //   try {
+  //     //Ask for notification permissions (important for iOS & Android 13+)
+  //     await _messaging.requestPermission(
+  //       alert: true,
+  //       badge: true,
+  //       sound: true,
+  //     );
+  //
+  //     //Check SharedPreferences for stored FCM token
+  //     final prefs = await SharedPreferences.getInstance();
+  //     String? fcmToken = prefs.getString("fcm_token");
+  //
+  //     //If no stored token, get a fresh one from Firebase
+  //     fcmToken ??= await _messaging.getToken();
+  //
+  //     if (fcmToken != null && fcmToken.isNotEmpty) {
+  //       print(" FCM Token to send: $fcmToken");
+  //
+  //       //Save/Update it in SharedPreferences for future use
+  //       await prefs.setString("fcm_token", fcmToken);
+  //
+  //       // Send it to your backend API
+  //       final dto = UpdateFcmTokenDto(
+  //         userId: userId,
+  //         APPVersion: appVersion,
+  //         APPName: appName,
+  //         Token: fcmToken,
+  //       );
+  //
+  //       await dashboardController.updateFCMToken(userId, dto, "Bearer $token");
+  //     } else {
+  //       print(" Failed to get FCM token.");
+  //     }
+  //   } catch (e) {
+  //     print("Error initializing FCM: $e");
+  //   }
+  // }
   Future<void> ResetFcmToken(String userId, String token,String appName , String appVersion) async {
     try {
         final dto = UpdateFcmTokenDto(userId: userId, APPVersion: appVersion, APPName: appName, Token: "0");

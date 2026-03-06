@@ -33,7 +33,7 @@ Future<void> main() async {
   FirebaseMessaging.onBackgroundMessage(_firebaseBackgroundHandler);
 
   // Initialize your FCM service
-  //await FcmService.init();
+  await FcmService.init();
 
   final sharedPref = await SharedPreferences.getInstance();
   final bool isLogged = sharedPref.getBool("is_logged") ?? false;
